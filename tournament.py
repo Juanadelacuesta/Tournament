@@ -12,9 +12,36 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
-
-def deleteMatches():
-    """Remove all the match records from the database.
+def registerData(table, column, data):
+    """Adds registers to the database
+     Args:
+      Data: Data to be inserted.
+      Table: Table where the register goes
+      Column: Column to insert the register
+     Returns:
+      "OK" if correctly inserted
+      "ERROR" Database error description
+    """
+    status = "";
+      
+    db = connect()
+    cur = db.cursor()
+    query = "INSERT INTO %s (%s) VALUES ('%s')" % (table, column, data)
+    try:
+        cur.execute(query)
+    except psycopg2.Error as error:
+        status =  error.pgerror
+         
+    db.commit()
+    db.close() 
+    
+    if (cur.statusmessage == 'INSERT 0 1'):
+        status = 'OK'
+        
+    return status
+    
+def deleteRegisters(table):
+    """Remove all the records from the database of a given table.
        Returns:
         "OK"
         "ERROR" Database error description 
@@ -23,15 +50,26 @@ def deleteMatches():
     status = "OK"
     db = connect()
     cur = db.cursor()
+    query = "DELETE FROM %s" % (table,)
     
     try:
-        cur.execute("DELETE FROM matches")
+        cur.execute(query)
     except psycopg2.Error as error:
         print error.pgerror
         results = error.pgerror
         
     db.commit()
-    db.close() 
+    db.close()       
+    
+    
+def deleteMatches():
+    """Remove all the match records from the database.
+       Returns:
+        "OK"
+        "ERROR" Database error description 
+    """
+    deleteRegisters("matches")  
+
 
 
 def deletePlayers():
@@ -40,20 +78,16 @@ def deletePlayers():
         "OK"
         "ERROR" Database error description 
     """
-        
-    status = "OK"
-    db = connect()
-    cur = db.cursor()
+    return deleteRegisters("players")
     
-    try:
-        cur.execute("DELETE FROM players")
-    except psycopg2.Error as error:
-        print error.pgerror
-        results = error.pgerror
+def deleteTournaments():
+    """Remove all the torunaments records from the database.
+       Returns:
+        "OK"
+        "ERROR" Database error description 
+    """
         
-    db.commit()
-    db.close() 
-    
+    return deleteRegisters("tournaments") 
 
 def countPlayers():
     """Returns the number of players currently registered.
@@ -84,30 +118,20 @@ def registerPlayer(name):
       name: the player's full name (need not be unique).
      Returns:
       "OK" if correctly inserted
-      "ERROR - Name blank" if the name is blank
-      "ERROR - Problems with the database, data not saved"
+      "ERROR" Database error description
     """
-    status = "";
+
+    return registerData("players", "name", name)
     
-    if not(name):
-        status = 'ERROR - Name blank' 
-        return status
-        
-    db = connect()
-    cur = db.cursor()
+def registerTournament(name):
+    """Adds a torunament to the tournament database.
+     Args:
+      name: the tourament name (need not be unique).
+     Returns:
+      "ERROR" Database error description
+    """
     
-    try:
-        cur.execute("INSERT INTO players (name) VALUES (%s)",(name,))
-    except psycopg2.Error as error:
-        status =  error.pgerror
-         
-    db.commit()
-    db.close() 
-    
-    if (cur.statusmessage == 'INSERT 0 1'):
-        status = 'OK'
-        
-    return status
+    return registerData("tournament", "name", name)    
     
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -172,8 +196,9 @@ def swissPairings():
         name2: the second player's name
     """
 
-#print (registerPlayer('juan'))
+print (registerPlayer('juan'))
 #print (countPlayers())
-#deletePlayers()
-print (reportMatch(23, 26, 1))
-deleteMatches()
+deletePlayers()
+#print (reportMatch(23, 26, 1))
+#deleteMatches()
+#print (registerData("players", "name", "valentin"))
