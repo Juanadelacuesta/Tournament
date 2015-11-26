@@ -14,12 +14,34 @@ def connect():
 
 
 def deleteMatches():
-    """Remove all the match records from the database."""
+    """Remove all the match records from the database.
+       Returns:
+        "OK"
+        "ERROR" Database error description 
+    """
+        
+    status = "OK"
+    db = connect()
+    cur = db.cursor()
+    
+    try:
+        cur.execute("DELETE FROM matches")
+    except psycopg2.Error as error:
+        print error.pgerror
+        results = error.pgerror
+        
+    db.commit()
+    db.close() 
 
 
 def deletePlayers():
-    """Remove all the player records from the database."""
+    """Remove all the player records from the database.
+       Returns:
+        "OK"
+        "ERROR" Database error description 
+    """
         
+    status = "OK"
     db = connect()
     cur = db.cursor()
     
@@ -27,7 +49,7 @@ def deletePlayers():
         cur.execute("DELETE FROM players")
     except psycopg2.Error as error:
         print error.pgerror
-        results = 'ERROR - Problems with the database'
+        results = error.pgerror
         
     db.commit()
     db.close() 
@@ -108,10 +130,10 @@ def reportMatch(winner, loser, tournament):
     Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
+      tourament: Id of the tournament the match belongs to 
     Returns:
       "OK" if correctly inserted
-      "ERROR - Name blank" if the name is blank
-      "ERROR - Problems with the database, data not saved"
+      "ERROR" Database error description
     """
     status = "";
     
@@ -153,4 +175,5 @@ def swissPairings():
 #print (registerPlayer('juan'))
 #print (countPlayers())
 #deletePlayers()
-print (reportMatch(21, 26, 1))
+print (reportMatch(23, 26, 1))
+deleteMatches()
