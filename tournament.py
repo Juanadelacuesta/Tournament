@@ -12,8 +12,8 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
-def registerData(table, column, data):
-    """Adds registers to the database
+def registerMultipleData(table, *data):
+    """Adds registers to the database, only numeric values
      Args:
       Data: Data to be inserted.
       Table: Table where the register goes
@@ -26,7 +26,12 @@ def registerData(table, column, data):
       
     db = connect()
     cur = db.cursor()
-    query = "INSERT INTO %s (%s) VALUES ('%s')" % (table, column, data)
+    
+
+    args_str = ",".join([str(register) for register in data])
+    query = "INSERT INTO {} VALUES {}".format(table, args_str)
+    print query
+    
     try:
         cur.execute(query)
     except psycopg2.Error as error:
@@ -159,25 +164,9 @@ def reportMatch(winner, loser, tournament):
       "OK" if correctly inserted
       "ERROR" Database error description
     """
-    status = "";
     
-    db = connect()
-    cur = db.cursor()
-    args = [winner, loser, tournament, winner]
-    query = ("INSERT INTO matches VALUES (%s, %s, %s, %s)")
-    try:
-        cur.execute(query,args)
-        
-    except psycopg2.Error as error:
-        status =  error.pgerror
-         
-    db.commit()
-    db.close() 
+    return registerMultipleData("matches", (winner,loser,tournament,winner))
     
-    if (cur.statusmessage == 'INSERT 0 1'):
-        status = 'OK'
-        
-    return status    
  
  
 def swissPairings():
@@ -196,9 +185,10 @@ def swissPairings():
         name2: the second player's name
     """
 
+
 print (registerPlayer('juan'))
 #print (countPlayers())
-deletePlayers()
-#print (reportMatch(23, 26, 1))
+#deletePlayers()
+print (reportMatch(23, 26, 1))
 #deleteMatches()
 #print (registerData("players", "name", "valentin"))
