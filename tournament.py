@@ -19,11 +19,42 @@ def deleteMatches():
 
 def deletePlayers():
     """Remove all the player records from the database."""
-
+        
+    db = connect()
+    cur = db.cursor()
+    
+    try:
+        cur.execute("DELETE FROM players")
+    except psycopg2.Error as error:
+        print error.pgerror
+        results = 'ERROR - Problems with the database'
+        
+    db.commit()
+    db.close() 
+    
 
 def countPlayers():
-    """Returns the number of players currently registered."""
-
+    """Returns the number of players currently registered.
+       Returns:
+        A one value tuple with number of players in the database
+        ERROR - Problems with the database
+        """
+        
+    db = connect()
+    cur = db.cursor()
+    
+    try:
+        cur.execute("SELECT count(*) FROM players")
+        results = cur.fetchall()
+        results = results[0]
+    except psycopg2.Error as error:
+        #print error.pgerror
+        results = 'ERROR - Problems with the database'
+        
+    db.commit()
+    db.close() 
+    return (results)
+  
 
 def registerPlayer(name):
     """Adds a player to the tournament database.
@@ -32,21 +63,29 @@ def registerPlayer(name):
      Returns:
       "OK" if correctly inserted
       "ERROR - Name blank" if the name is blank
+      "ERROR - Problems with the database, data not saved"
     """
+    status = "";
+    
     if not(name):
-        return "ERROR - Name blank"
+        status = 'ERROR - Name blank' 
+        return status
         
     db = connect()
     cur = db.cursor()
     
     try:
         cur.execute("INSERT INTO players (name) VALUES (%s)",(name,))
-    except psycopg2 as error
-        #print (cur.statusmessage)
-        print error.pgerror
-        
+    except psycopg2.Error as error:
+        status =  error.pgerror
+         
     db.commit()
-    db.close()
+    db.close() 
+    
+    if (cur.statusmessage == 'INSERT 0 1'):
+        status = 'OK'
+        
+    return status
     
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -63,13 +102,36 @@ def playerStandings():
     """
 
 
-def reportMatch(winner, loser):
+def reportMatch(winner, loser, tournament):
     """Records the outcome of a single match between two players.
 
     Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
+    Returns:
+      "OK" if correctly inserted
+      "ERROR - Name blank" if the name is blank
+      "ERROR - Problems with the database, data not saved"
     """
+    status = "";
+    
+    db = connect()
+    cur = db.cursor()
+    args = [winner, loser, tournament, winner]
+    query = ("INSERT INTO matches VALUES (%s, %s, %s, %s)")
+    try:
+        cur.execute(query,args)
+        
+    except psycopg2.Error as error:
+        status =  error.pgerror
+         
+    db.commit()
+    db.close() 
+    
+    if (cur.statusmessage == 'INSERT 0 1'):
+        status = 'OK'
+        
+    return status    
  
  
 def swissPairings():
@@ -88,4 +150,7 @@ def swissPairings():
         name2: the second player's name
     """
 
-print (registerPlayer("juana 3"))
+#print (registerPlayer('juan'))
+#print (countPlayers())
+#deletePlayers()
+print (reportMatch(21, 26, 1))
