@@ -13,11 +13,11 @@ CREATE TABLE IF NOT EXISTS players (
 
 --Table to storage all matches results
 CREATE TABLE IF NOT EXISTS matches(
-    player1_ID integer REFERENCES players(player_ID),
-    player2_ID integer REFERENCES players(player_ID),
+    winner_ID integer REFERENCES players(player_ID),
+    loser_ID integer REFERENCES players(player_ID) CHECK (winner_ID != loser_ID),
     tournament_ID integer REFERENCES tournaments,
-    winner integer NOT NULL,
-	PRIMARY KEY (player1_ID, player2_ID, tournament_ID)
+    tie boolean, 
+	PRIMARY KEY (winner_ID, loser_ID, tournament_ID) or (loser_ID, winer_ID, tournament_ID)
     );    
 
 --Table to storage all the tournaments data
@@ -27,4 +27,5 @@ CREATE TABLE IF NOT EXISTS tournaments (
     );
 
 
+ 
 

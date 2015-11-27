@@ -12,43 +12,12 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
-def registerData(table, column, data):
-    """Adds registers to the database, only text values
-     Args:
-      Data: Data to be inserted.
-      Table: Table where the register goes
-      Column: Column to insert the register
-     Returns:
-      "OK" if correctly inserted
-      "ERROR" Database error description
-    """
-    status = "";
-      
-    db = connect()
-    cur = db.cursor()
-
-    query = "INSERT INTO {} ({}) VALUES ('{}')".format(table, column, data)
-    
-    try:
-        cur.execute(query)
-    except psycopg2.Error as error:
-        status =  error.pgerror
-         
-    db.commit()
-    db.close() 
-    
-    if (cur.statusmessage == 'INSERT 0 1'):
-        status = 'OK'
-        
-    return status
-    
 
 def registerMultipleData(table, **column_data):
-    """Adds registers to the database, only numeric values
+    """Adds registers to the database, the specified column = data to the table
      Args:
-      Data: Data to be inserted.
-      Table: Table where the register goes
-      Column: Column to insert the register
+      **column_data: Dictionary with the column = value to be inserted
+      table: Table where the register goes
      Returns:
       "OK" if correctly inserted
       "ERROR" Database error description
@@ -57,21 +26,22 @@ def registerMultipleData(table, **column_data):
   
     db = connect()
     cur = db.cursor()
-  
-    columns_str = ",".join([str(s) for s in column_data.keys()])
     
+# Give format to de data to be inserted, if its a numeric value or a string    
+    columns_str = ",".join([str(s) for s in column_data.keys()])   
     data = list(column_data.values())
-    
+   
     for i in range (0,len(column_data)):
         if isinstance(data[i],str):
             data[i] = "'{}'".format(data[i]) 
     
     args_str = ", ".join([str(s) for s in data])   
          
-        
-    query = "INSERT INTO {} ({}) VALUES ({})".format(table, columns_str,args_str)
-    print query
-    
+     
+# Format the query to be executed     
+    query = "INSERT INTO {} ({}) VALUES ({})".format(table,columns_str,args_str)
+    #print query
+   
     try:
         cur.execute(query)
     except psycopg2.Error as error:
@@ -79,7 +49,8 @@ def registerMultipleData(table, **column_data):
         
     db.commit()
     db.close() 
-    
+
+# VErify the correct insertion into the database    
     if (cur.statusmessage == 'INSERT 0 1'):
         status = 'OK'
          
@@ -95,17 +66,18 @@ def deleteRegisters(table):
     status = "OK"
     db = connect()
     cur = db.cursor()
-    query = "DELETE FROM %s" % (table,)
+    query = "DELETE FROM %s"
     
     try:
-        cur.execute(query)
+        cur.execute(query, table)
     except psycopg2.Error as error:
-        print error.pgerror
-        results = error.pgerror
+        #print error.pgerror
+        status = error.pgerror
         
     db.commit()
     db.close()       
-    
+    return status
+ 
     
 def deleteMatches():
     """Remove all the match records from the database.
@@ -166,17 +138,16 @@ def registerPlayer(players_name):
       "ERROR" Database error description
     """
     return registerMultipleData("players", name = players_name)
-    #return registerData("players", "name", name)
     
-def registerTournament(name):
+def registerTournament(tournament_name):
     """Adds a torunament to the tournament database.
      Args:
       name: the tourament name (need not be unique).
      Returns:
       "ERROR" Database error description
     """
-    
-    return registerData("tournament", "name", name)    
+ 
+    return registerMultipleData("tournaments", name = tournament_name)    
     
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -193,22 +164,46 @@ def playerStandings():
     """
 
 
-def reportMatch(winner, loser, tournament):
+def reportMatch(winner, loser, tournament, tie_result):
     """Records the outcome of a single match between two players.
 
     Args:
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
-      tourament: Id of the tournament the match belongs to 
+      tournament: Id of the tournament the match belongs to 
     Returns:
       "OK" if correctly inserted
       "ERROR" Database error description
+      "ERROR - Game duplicated" If the game is already in the database
     """
+    if not (checkExistanceOfMatch(winner, loser, tournament)):
+        return registerMultipleData("matches", winner_ID = winner,\
+        loser_ID = loser, tournament_ID = tournament, tie = tie_result)
     
-    return registerMultipleData("matches", (winner,loser,tournament,winner))
+    else:
+        return "ERROR - Game duplicated"
     
- 
- 
+    
+def checkExistanceOfMatch(winner, loser, tournament):
+    """Checks if a particular game from a particular tournament is already in 
+       the database
+       
+       Returns:
+        0 if the game is not present
+        1 if the game is already present 
+    """
+        
+    db = connect()
+    cur = db.cursor()
+    query = "SELECT count(*) FROM matches WHERE tournament_ID = {} AND (\
+    (winner_ID = {} AND loser_ID = {}) OR (winner_ID = {} AND loser_ID = {}))".\
+    format(tournament, winner, loser, loser, winner)
+    
+    cur.execute(query)
+    results = cur.fetchall() 
+    db.close()
+    return results[0][0]
+
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
   
@@ -226,9 +221,10 @@ def swissPairings():
     """
 
 
-print (registerPlayer('Osvaldo'))
+#print (registerPlayer('Carlos'))
+#print (registerTournament('Tennis'))
 #print (countPlayers())
 #deletePlayers()
-#print (reportMatch(23, 26, 1))
+print (reportMatch(79, 82, 7, False))
+#print (checkExistanceOfMatch(79, 80, 7))
 #deleteMatches()
-#print (registerData("players", "name", "valentin"))
