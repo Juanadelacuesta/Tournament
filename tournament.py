@@ -12,8 +12,8 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
-def registerMultipleData(table, *data):
-    """Adds registers to the database, only numeric values
+def registerData(table, column, data):
+    """Adds registers to the database, only text values
      Args:
       Data: Data to be inserted.
       Table: Table where the register goes
@@ -26,11 +26,8 @@ def registerMultipleData(table, *data):
       
     db = connect()
     cur = db.cursor()
-    
 
-    args_str = ",".join([str(register) for register in data])
-    query = "INSERT INTO {} VALUES {}".format(table, args_str)
-    print query
+    query = "INSERT INTO {} ({}) VALUES ('{}')".format(table, column, data)
     
     try:
         cur.execute(query)
@@ -43,6 +40,49 @@ def registerMultipleData(table, *data):
     if (cur.statusmessage == 'INSERT 0 1'):
         status = 'OK'
         
+    return status
+    
+
+def registerMultipleData(table, **column_data):
+    """Adds registers to the database, only numeric values
+     Args:
+      Data: Data to be inserted.
+      Table: Table where the register goes
+      Column: Column to insert the register
+     Returns:
+      "OK" if correctly inserted
+      "ERROR" Database error description
+    """
+    status = "";
+  
+    db = connect()
+    cur = db.cursor()
+  
+    columns_str = ",".join([str(s) for s in column_data.keys()])
+    
+    data = list(column_data.values())
+    
+    for i in range (0,len(column_data)):
+        if isinstance(data[i],str):
+            data[i] = "'{}'".format(data[i]) 
+    
+    args_str = ", ".join([str(s) for s in data])   
+         
+        
+    query = "INSERT INTO {} ({}) VALUES ({})".format(table, columns_str,args_str)
+    print query
+    
+    try:
+        cur.execute(query)
+    except psycopg2.Error as error:
+        status =  error.pgerror
+        
+    db.commit()
+    db.close() 
+    
+    if (cur.statusmessage == 'INSERT 0 1'):
+        status = 'OK'
+         
     return status
     
 def deleteRegisters(table):
@@ -117,7 +157,7 @@ def countPlayers():
     return (results)
   
 
-def registerPlayer(name):
+def registerPlayer(players_name):
     """Adds a player to the tournament database.
      Args:
       name: the player's full name (need not be unique).
@@ -125,8 +165,8 @@ def registerPlayer(name):
       "OK" if correctly inserted
       "ERROR" Database error description
     """
-
-    return registerData("players", "name", name)
+    return registerMultipleData("players", name = players_name)
+    #return registerData("players", "name", name)
     
 def registerTournament(name):
     """Adds a torunament to the tournament database.
@@ -186,9 +226,9 @@ def swissPairings():
     """
 
 
-print (registerPlayer('juan'))
+print (registerPlayer('Osvaldo'))
 #print (countPlayers())
 #deletePlayers()
-print (reportMatch(23, 26, 1))
+#print (reportMatch(23, 26, 1))
 #deleteMatches()
 #print (registerData("players", "name", "valentin"))
