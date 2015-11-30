@@ -12,6 +12,10 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
+def close_connection(connection):
+    """Desonnect to the PostgreSQL database."""
+    connection.close()
+
 
 def registerMultipleData(table, **column_data):
     """Adds registers to the database, the specified column = data to the table
@@ -48,7 +52,7 @@ def registerMultipleData(table, **column_data):
         status =  error.pgerror
         
     db.commit()
-    db.close() 
+    close_connection(db) 
 
 # VErify the correct insertion into the database    
     if (cur.statusmessage == 'INSERT 0 1'):
@@ -148,21 +152,7 @@ def registerTournament(tournament_name):
     """
  
     return registerMultipleData("tournaments", name = tournament_name)    
-    
-def playerStandings():
-    """Returns a list of the players and their win records, sorted by wins.
-
-    The first entry in the list should be the player in first place, or a player
-    tied for first place if there is currently a tie.
-
-    Returns:
-      A list of tuples, each of which contains (id, name, wins, matches):
-        id: the player's unique id (assigned by the database)
-        name: the player's full name (as registered)
-        wins: the number of matches the player has won
-        matches: the number of matches the player has played
-    """
-
+   
 
 def reportMatch(winner, loser, tournament, tie_result):
     """Records the outcome of a single match between two players.
@@ -189,10 +179,11 @@ def checkExistanceOfMatch(winner, loser, tournament):
        the database
        
        Returns:
-        0 if the game is not present
-        1 if the game is already present 
+        False if the game is not present
+        True if the game is already present 
     """
-        
+ 
+# Check the existance of the game in the database, disregard of the results 
     db = connect()
     cur = db.cursor()
     query = "SELECT count(*) FROM matches WHERE tournament_ID = {} AND (\
@@ -202,8 +193,28 @@ def checkExistanceOfMatch(winner, loser, tournament):
     cur.execute(query)
     results = cur.fetchall() 
     db.close()
-    return results[0][0]
+    
+    if results[0][0]:
+        return True        
+    else:  
+       return False
+        
 
+def playerStandings():
+    """Returns a list of the players and their win records, sorted by wins.
+
+    The first entry in the list should be the player in first place, or a player
+    tied for first place if there is currently a tie.
+
+    Returns:
+      A list of tuples, each of which contains (id, name, wins, matches):
+        id: the player's unique id (assigned by the database)
+        name: the player's full name (as registered)
+        wins: the number of matches the player has won
+        matches: the number of matches the player has played
+    """
+    #select name, games.player_ID, games, winns from games, winns where winns.player_ID = games.player_ID order by winns;   
+       
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
   
@@ -220,11 +231,17 @@ def swissPairings():
         name2: the second player's name
     """
 
+#deleteMatches()
+#for i in range (0,10):
+ #   print (registerPlayer('paulo'+ str(i)))
+   
 
-#print (registerPlayer('Carlos'))
-#print (registerTournament('Tennis'))
+#for i in range (74,87):
+#    print (reportMatch(i, i+20, 1, False))
+    
+print (registerTournament('Chess'))
 #print (countPlayers())
 #deletePlayers()
-print (reportMatch(79, 82, 7, False))
-#print (checkExistanceOfMatch(79, 80, 7))
-#deleteMatches()
+#print (reportMatch(1,0, 7, True))
+#print (checkExistanceOfMatch(70, 80, 7))
+
