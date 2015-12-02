@@ -12,11 +12,17 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
+    
 def close_connection(connection):
-    """Desonnect to the PostgreSQL database."""
+    """Desonnect from the PostgreSQL database."""
     connection.close()
 
+    
+def commit_connection(connection):
+    """Commit to the PostgreSQL database."""
+    connection.commit()
 
+    
 def registerMultipleData(table, **column_data):
     """Adds registers to the database, the specified column = data to the table
      Args:
@@ -51,7 +57,7 @@ def registerMultipleData(table, **column_data):
     except psycopg2.Error as error:
         status =  error.pgerror
         
-    db.commit()
+    commit_connection(db)
     close_connection(db) 
 
 # VErify the correct insertion into the database    
@@ -70,16 +76,14 @@ def deleteRegisters(table):
     status = "OK"
     db = connect()
     cur = db.cursor()
-    query = "DELETE FROM %s"
-    
+    query = "DELETE FROM {}".format(table)
     try:
-        cur.execute(query, table)
+        cur.execute(query)
     except psycopg2.Error as error:
-        #print error.pgerror
         status = error.pgerror
         
-    db.commit()
-    db.close()       
+    commit_connection(db)
+    close_connection(db)     
     return status
  
     
@@ -123,13 +127,13 @@ def countPlayers():
     try:
         cur.execute("SELECT count(*) FROM players")
         results = cur.fetchall()
-        results = results[0]
+        results = results[0][0]
     except psycopg2.Error as error:
         #print error.pgerror
         results = 'ERROR - Problems with the database'
         
-    db.commit()
-    db.close() 
+    commit_connection(db)
+    close_connection(db) 
     return (results)
   
 
@@ -192,7 +196,7 @@ def checkExistanceOfMatch(winner, loser, tournament):
     
     cur.execute(query)
     results = cur.fetchall() 
-    db.close()
+    close_connection(db) 
     
     if results[0][0]:
         return True        
@@ -200,7 +204,7 @@ def checkExistanceOfMatch(winner, loser, tournament):
        return False
         
 
-def playerStandings():
+def playerStandings(tournament):
     """Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
@@ -213,8 +217,22 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    #select name, games.player_ID, games, winns from games, winns where winns.player_ID = games.player_ID order by winns;   
-       
+    db = connect()
+    cur = db.cursor()
+    query = "SELECT name, games.player_ID, games, wins FROM games, wins WHERE\
+    wins.player_ID = games.player_ID and tournament_ID = {}ORDER BY wins DESC".\
+    format(tournament)
+    
+    cur.execute(query)
+    results = cur.fetchall() 
+    close_connection(db) 
+
+    result = [{'name': str(row[0]), 'ID': str(row[1]), 'matches': row[2], \
+            'wins': row[3]} for row in results]
+
+    return result    
+    
+         
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
   
@@ -231,17 +249,36 @@ def swissPairings():
         name2: the second player's name
     """
 
-#deleteMatches()
-#for i in range (0,10):
- #   print (registerPlayer('paulo'+ str(i)))
-   
+#deleteMatches() 
 
-#for i in range (74,87):
-#    print (reportMatch(i, i+20, 1, False))
+print (registerTournament('Karate'))
+
     
-print (registerTournament('Chess'))
-#print (countPlayers())
-#deletePlayers()
+'''
+for i in range (71,90):
+    print (reportMatch(i+10, i-5, 2, False))
+    
+for i in range (0,10):
+    print (registerPlayer('julia'+ str(i)))
+
+for i in range (0,20):
+    print (registerPlayer('Karla'+ str(i)))    
+    
+print (registerTournament('Ping pong'))
+   
+for i in range (68,80):
+    print (reportMatch(i, i+3, 1, False))
+    
+for i in range (100,114):
+    print (reportMatch(i-30,i, 1, True))    
+ 
+for i in range (88,101):
+    print (reportMatch(i-3,i+2, 1, True))   
+ '''
+  
+#print (registerTournament('Ping pong'))
+print (countPlayers())
+#print deletePlayers()
 #print (reportMatch(1,0, 7, True))
 #print (checkExistanceOfMatch(70, 80, 7))
-
+print playerStandings(3)
