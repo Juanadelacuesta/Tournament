@@ -12,12 +12,12 @@ def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
 
-    
+  
 def close_connection(connection):
     """Desonnect from the PostgreSQL database."""
     connection.close()
 
-    
+
 def commit_connection(connection):
     """Commit to the PostgreSQL database."""
     connection.commit()
@@ -32,34 +32,26 @@ def registerMultipleData(table, **column_data):
       "OK" if correctly inserted
       "ERROR" Database error description
     """
-    status = "";
-  
+    status = "OK";
     db = connect()
     cur = db.cursor()
-    
-# Give format to de data to be inserted, if its a numeric value or a string    
-    columns_str = ",".join([str(s) for s in column_data.keys()])   
-    data = list(column_data.values())
+ 
+    columns_str = ", ".join([str(s) for s in column_data.keys()])
+    args_str = ", ".join(["%(" + str(s) + ")s" for s in column_data.keys()])
    
-    args_str = ", ".join([str(s) for s in data])   
-         
-     
 # Format the query to be executed     
-    query = "INSERT INTO {} ({}) VALUES (%s)".format(table,columns_str)
-    print query
-   
+    query = "INSERT INTO {} ({}) VALUES ({})".format(table, columns_str, 
+    args_str)
+
     try:
-        cur.execute(query,(args_str,))
+        cur.execute(query, column_data)
+        
     except psycopg2.Error as error:
         status =  error.pgerror
-        
+    
     commit_connection(db)
     close_connection(db) 
 
-# VErify the correct insertion into the database    
-    if (cur.statusmessage == 'INSERT 0 1'):
-        status = 'OK'
-         
     return status
     
 def deleteRegisters(table):
@@ -154,7 +146,7 @@ def registerTournament(tournament_name):
     return registerMultipleData("tournaments", name = tournament_name)    
    
 
-def reportMatch(winner, loser, tournament, tie_result):
+def reportMatch(winner, loser, tournament, tie_result = False):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -229,7 +221,7 @@ def playerStandings(tournament = 0):
     results = cur.fetchall() 
     close_connection(db)  
 
-    return [(row[1], row[0], row[2], row[3]) for row in results]  
+    return [(row[1], row[0], row[3], row[2]) for row in results]  
     
          
 def swissPairings():
@@ -249,9 +241,11 @@ def swissPairings():
     """
 
 #deleteMatches() 
-print (registerPlayer("julia o'neil"))
+#print (registerPlayer("12343 o'barca"))
 
 #print (registerTournament('Karate'))
+#
+#print (reportMatch(356, 370, 24, True))
 
 #print (reportMatch(234,235, 22, True))    
 
@@ -281,4 +275,4 @@ for i in range (88,101):
 #print deletePlayers()
 #print (reportMatch(1,0, 7, True))
 #print (checkExistanceOfMatch(70, 80, 7))
-print playerStandings()
+#print playerStandings()
