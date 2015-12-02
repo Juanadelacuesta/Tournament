@@ -41,19 +41,15 @@ def registerMultipleData(table, **column_data):
     columns_str = ",".join([str(s) for s in column_data.keys()])   
     data = list(column_data.values())
    
-    for i in range (0,len(column_data)):
-        if isinstance(data[i],str):
-            data[i] = "'{}'".format(data[i]) 
-    
     args_str = ", ".join([str(s) for s in data])   
          
      
 # Format the query to be executed     
-    query = "INSERT INTO {} ({}) VALUES ({})".format(table,columns_str,args_str)
-    #print query
+    query = "INSERT INTO {} ({}) VALUES (%s)".format(table,columns_str)
+    print query
    
     try:
-        cur.execute(query)
+        cur.execute(query,(args_str,))
     except psycopg2.Error as error:
         status =  error.pgerror
         
@@ -204,7 +200,7 @@ def checkExistanceOfMatch(winner, loser, tournament):
        return False
         
 
-def playerStandings(tournament):
+def playerStandings(tournament = 0):
     """Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
@@ -219,18 +215,21 @@ def playerStandings(tournament):
     """
     db = connect()
     cur = db.cursor()
-    query = "SELECT name, games.player_ID, games, wins FROM games, wins WHERE\
-    wins.player_ID = games.player_ID and tournament_ID = {}ORDER BY wins DESC".\
-    format(tournament)
+#Check if the petition is from an specific tournament or for all players    
+    if(tournament):
+        query = "SELECT name, games.player_ID, games, wins FROM games, wins\
+        WHERE wins.player_ID = games.player_ID AND tournament_ID = {} \
+        ORDER BY wins DESC".format(tournament)
+        
+    else:
+        query = "SELECT name, games.player_ID, games, wins FROM games, wins\
+        WHERE wins.player_ID = games.player_ID ORDER BY wins DESC"
     
     cur.execute(query)
     results = cur.fetchall() 
-    close_connection(db) 
+    close_connection(db)  
 
-    result = [{'name': str(row[0]), 'ID': str(row[1]), 'matches': row[2], \
-            'wins': row[3]} for row in results]
-
-    return result    
+    return [(row[1], row[0], row[2], row[3]) for row in results]  
     
          
 def swissPairings():
@@ -250,12 +249,13 @@ def swissPairings():
     """
 
 #deleteMatches() 
+print (registerPlayer("julia o'neil"))
 
-print (registerTournament('Karate'))
+#print (registerTournament('Karate'))
 
-    
-'''
-for i in range (71,90):
+#print (reportMatch(234,235, 22, True))    
+
+'''for i in range (71,90):
     print (reportMatch(i+10, i-5, 2, False))
     
 for i in range (0,10):
@@ -277,8 +277,8 @@ for i in range (88,101):
  '''
   
 #print (registerTournament('Ping pong'))
-print (countPlayers())
+#print (countPlayers())
 #print deletePlayers()
 #print (reportMatch(1,0, 7, True))
 #print (checkExistanceOfMatch(70, 80, 7))
-print playerStandings(3)
+print playerStandings()
