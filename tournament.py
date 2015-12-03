@@ -41,7 +41,7 @@ def registerMultipleData(table, **column_data):
 
 # Format the query to be executed
     query = "INSERT INTO {} ({}) VALUES ({})".format(table, columns_str,
-    args_str)
+                                                     args_str)
 
     try:
         cur.execute(query, column_data)
@@ -124,7 +124,7 @@ def countPlayers():
     return (results)
 
 
-def registerPlayer(players_name,tournament=0):
+def registerPlayer(players_name, tournament=0):
     """Adds a player to the tournament database.
      Args:
       name: the player's full name (need not be unique).
@@ -132,7 +132,7 @@ def registerPlayer(players_name,tournament=0):
       "OK" if correctly inserted
       "ERROR" Database error description
     """
-    return registerMultipleData("players", name=players_name, 
+    return registerMultipleData("players", name=players_name,
                                 tournament_ID=tournament)
 
 
@@ -162,17 +162,19 @@ def reportMatch(winner, loser, tie_result=False):
 
     if not(check_Players_in_tournament(winner, loser)):
         return "ERROR Players not in the same tournament"
-    
+
     if (checkExistanceOfMatch(winner, loser)):
         return "ERROR - Game duplicated"
-    
+
     return registerMultipleData("matches", winner_ID=winner,
-    loser_ID=loser, tie=tie_result)
-    
+                                loser_ID=loser, tie=tie_result)
+
 
 def checkExistanceOfMatch(winner, loser):
     """Checks if a particular game from a particular tournament is already in
        the database
+       Args:
+        Winner and loser: The ID of the participants of the match 
        Returns:
         False if the game is not present
         True if the game is already present
@@ -195,8 +197,10 @@ def checkExistanceOfMatch(winner, loser):
 
 
 def check_Players_in_tournament(winner, loser):
-    """Checks if a particular game from a particular tournament is already in
-       the database
+    """Checks if a couple of players are in the same tournament and can play a 
+    match
+       Args:
+        Winner and loser: Ids of the players
        Returns:
         False if the game is not present
         True if the game is already present
@@ -205,25 +209,27 @@ def check_Players_in_tournament(winner, loser):
     db = connect()
     cur = db.cursor()
     query = ("SELECT tournament_ID FROM players WHERE player_ID = %s \
-    OR player_ID = %s") 
-    
+    OR player_ID = %s")
+
     cur.execute(query, (winner, loser))
     results = cur.fetchall()
     close_connection(db)
-    
-    [t1, t2]= [row[0] for row in results]
-    
+
+    [t1, t2] = [row[0] for row in results]
+
     if t1 == t2:
         return True
     else:
-        return False        
+        return False
+
 
 def playerStandings(tournament=0):
     """Returns a list of the players and their win records, sorted by wins.
     The tournament ID =  0 is reserved for all tournaments
-    The first entry in the list should be the player in first place, or a player
-    tied for first place if there is currently a tie.
-
+    The first entry in the list should be the player in first place, or a
+    player tied for first place if there is currently a tie.
+    Args:
+      The tournament_ID
     Returns:
       A list of tuples, each of which contains (id, name, wins, matches):
         id: the player's unique id (assigned by the database)
@@ -264,18 +270,8 @@ def swissPairings(tournament=0):
         name2: the second player's name
     """
     players = playerStandings(tournament)
-    results = [(i,n) for (i, n, w, m) in players]
+    results = [(i, n) for (i, n, w, m) in players]
     results = iter(results)
-    return [(x[0], x[1], y[0], y[1]) for x,y in zip(results,results)]
 
-#print registerTournament("chess")     
-#print deletePlayers()
-#print registerPlayer("camila3 ", 3)
-#print registerPlayer("juan3 ", 3)
-#print registerPlayer("carlos2", 2)
-#print registerPlayer("clair2", 2)
-#print countPlayers()
-#print reportMatch(210, 209)
-#print check_Player_in_tournament(197, 194)
-print swissPairings(2)
-#print playerStandings(2)
+    return [(x[0], x[1], y[0], y[1]) for x, y in zip(results, results)]
+    
