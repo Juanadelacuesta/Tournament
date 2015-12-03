@@ -113,7 +113,7 @@ def countPlayers():
     cur = db.cursor()
 
     try:
-        cur.execute("SELECT count(*) FROM players")
+        cur.execute("SELECT count(player_ID) FROM players")
         results = cur.fetchall()
         results = results[0][0]
     except psycopg2.Error as error:
@@ -124,7 +124,7 @@ def countPlayers():
     return (results)
 
 
-def registerPlayer(players_name):
+def registerPlayer(players_name,tournament=0):
     """Adds a player to the tournament database.
      Args:
       name: the player's full name (need not be unique).
@@ -132,7 +132,8 @@ def registerPlayer(players_name):
       "OK" if correctly inserted
       "ERROR" Database error description
     """
-    return registerMultipleData("players", name=players_name)
+    return registerMultipleData("players", name=players_name, 
+                                tournament_ID=tournament)
 
 
 def registerTournament(tournament_name):
@@ -145,7 +146,7 @@ def registerTournament(tournament_name):
     return registerMultipleData("tournaments", name=tournament_name)
 
 
-def reportMatch(winner, loser, tournament, tie_result=False):
+def reportMatch(winner, loser, tie_result=False):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -157,15 +158,14 @@ def reportMatch(winner, loser, tournament, tie_result=False):
       "ERROR" Database error description
       "ERROR - Game duplicated" If the game is already in the database
     """
-    if not (checkExistanceOfMatch(winner, loser, tournament)):
+    if not (checkExistanceOfMatch(winner, loser)):
         return registerMultipleData("matches", winner_ID=winner,
-        loser_ID=loser, tournament_ID=tournament, tie=tie_result)
+        loser_ID=loser, tie=tie_result)
 
     else:
         return "ERROR - Game duplicated"
 
-
-def checkExistanceOfMatch(winner, loser, tournament):
+def checkExistanceOfMatch(winner, loser):
     """Checks if a particular game from a particular tournament is already in
        the database
        Returns:
@@ -175,9 +175,9 @@ def checkExistanceOfMatch(winner, loser, tournament):
 # Check the existance of the game in the database, disregard of the results
     db = connect()
     cur = db.cursor()
-    query = "SELECT count(*) FROM matches WHERE tournament_ID = {} AND (\
-    (winner_ID = {} AND loser_ID = {}) OR (winner_ID = {} AND loser_ID = {}))"\
-    .format(tournament, winner, loser, loser, winner)
+    query = "SELECT count(*) FROM matches WHERE ((winner_ID = {} AND \
+    loser_ID = {}) OR (winner_ID = {} AND loser_ID = {}))"\
+    .format(winner, loser, loser, winner)
 
     cur.execute(query)
     results = cur.fetchall()
@@ -234,16 +234,15 @@ def swissPairings(tournament=0):
         id2: the second player's unique id
         name2: the second player's name
     """
-    players = playerStandings(tournament=0)
+    players = playerStandings(tournament)
     results = [(i,n) for (i, n, w, m) in players]
     results = iter(results)
-    
-    results = [(x[0], x[1], y[0], y[1]) for x,y in zip(results,results)]
-         
-    return results
+    return [(x[0], x[1], y[0], y[1]) for x,y in zip(results,results)]
 
-print swissPairings(0)
-
-
+#print registerTournament("chess")     
+#print deletePlayers()
+print registerPlayer("carlos lopez", 1)
+print countPlayers()
+#print reportMatch(3, 2)
 
 
