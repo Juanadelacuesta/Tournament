@@ -157,13 +157,18 @@ def reportMatch(winner, loser, tie_result=False):
       "OK" if correctly inserted
       "ERROR" Database error description
       "ERROR - Game duplicated" If the game is already in the database
+      "ERROR Players not in the same tournament"
     """
-    if not (checkExistanceOfMatch(winner, loser)):
-        return registerMultipleData("matches", winner_ID=winner,
-        loser_ID=loser, tie=tie_result)
 
-    else:
+    if not(check_Players_in_tournament(winner, loser)):
+        return "ERROR Players not in the same tournament"
+    
+    if (checkExistanceOfMatch(winner, loser)):
         return "ERROR - Game duplicated"
+    
+    return registerMultipleData("matches", winner_ID=winner,
+    loser_ID=loser, tie=tie_result)
+    
 
 def checkExistanceOfMatch(winner, loser):
     """Checks if a particular game from a particular tournament is already in
@@ -189,6 +194,30 @@ def checkExistanceOfMatch(winner, loser):
         return False
 
 
+def check_Players_in_tournament(winner, loser):
+    """Checks if a particular game from a particular tournament is already in
+       the database
+       Returns:
+        False if the game is not present
+        True if the game is already present
+    """
+# Check the existance of the game in the database, disregard of the results
+    db = connect()
+    cur = db.cursor()
+    query = ("SELECT tournament_ID FROM players WHERE player_ID = %s \
+    OR player_ID = %s") 
+    
+    cur.execute(query, (winner, loser))
+    results = cur.fetchall()
+    close_connection(db)
+    
+    [t1, t2]= [row[0] for row in results]
+    
+    if t1 == t2:
+        return True
+    else:
+        return False        
+
 def playerStandings(tournament=0):
     """Returns a list of the players and their win records, sorted by wins.
     The tournament ID =  0 is reserved for all tournaments
@@ -207,7 +236,7 @@ def playerStandings(tournament=0):
     # Check if the petition is from an specific tournament or for all players
     if(tournament):
         query = "SELECT games.player_ID, name, wins, games FROM games, wins\
-        WHERE wins.player_ID = games.player_ID AND tournament_ID = {} \
+        WHERE wins.player_ID = games.player_ID AND games.tournament_ID = {} \
         ORDER BY wins DESC".format(tournament)
 
     else:
@@ -241,8 +270,12 @@ def swissPairings(tournament=0):
 
 #print registerTournament("chess")     
 #print deletePlayers()
-print registerPlayer("carlos lopez", 1)
-print countPlayers()
-#print reportMatch(3, 2)
-
-
+#print registerPlayer("camila3 ", 3)
+#print registerPlayer("juan3 ", 3)
+#print registerPlayer("carlos2", 2)
+#print registerPlayer("laura2", 2)
+#print countPlayers()
+#print reportMatch(210, 209)
+#print check_Player_in_tournament(197, 194)
+print swissPairings(0)
+#print playerStandings()
