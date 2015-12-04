@@ -119,7 +119,6 @@ def countPlayers():
     except psycopg2.Error as error:
         results = 'ERROR - Problems with the database'
 
-    commit_connection(db)
     close_connection(db)
     return (results)
 
@@ -241,13 +240,11 @@ def playerStandings(tournament=0):
     cur = db.cursor()
     # Check if the petition is from an specific tournament or for all players
     if(tournament):
-        query = "SELECT games.player_ID, name, wins, games FROM games, wins\
-        WHERE wins.player_ID = games.player_ID AND games.tournament_ID = {} \
-        ORDER BY wins DESC".format(tournament)
+        query = "SELECT * FROM standings WHERE games.tournament_ID = {}"\
+        .format(tournament)
 
     else:
-        query = "SELECT games.player_ID, name, wins, games FROM games, wins\
-        WHERE wins.player_ID = games.player_ID ORDER BY wins DESC"
+        query = "SELECT * FROM standings;"
 
     cur.execute(query)
     results = cur.fetchall()
