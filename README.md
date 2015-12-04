@@ -1,42 +1,42 @@
-# Tournament
-Second project for teh Udacity full Stack Nano Degree
+#TOURNAMENT
+Second project for the Udacity full Stack Nano Degree
+
+Tournament is a group of fucntions that help you keep scores in a swiss style
+tournament. 
 
 In order to access the functions built in the tournament.py
 file, clone the repository and use the Postgres console 
 to import the tournament.sql file in order to create the 
-database. The command to do so is: 
+database. 
+The command to do so is: 
     psql -f tournament.sql
-    
+ 
+##Contents 
 Import the module to your file and that´s it. The functions in the file are the
 following:
 
-
-def connect():
+###def connect():
     Connect to the PostgreSQL database.  
     Returns a database connection.
 
-def close_connection(connection):
+###def close_connection(connection):
     Desonnect from the PostgreSQL database.
 
-def commit_connection(connection):
+###def commit_connection(connection):
     Commit to the PostgreSQL database."""
     connection.commit()
 
-    Example of a connection:
+    ###Example of a connection:
 
-        db = connect()
+  ` ``` db = connect()
         cur = db.cursor()
         query = "DELETE FROM table_name"
-        try:
-            cur.execute(query)
-        except psycopg2.Error as error:
-            status = error.pgerror
-
+        cur.execute(query)
         commit_connection(db)
-        close_connection(db)
+        close_connection(db) ``` `
         
 
-def registerMultipleData(table, **column_data):
+###def registerMultipleData(table, **column_data):
     Adds registers to the database, the specified column = data to the table
      Args:
       **column_data: Dictionary with the column = value to be inserted
@@ -46,7 +46,7 @@ def registerMultipleData(table, **column_data):
       "ERROR" Database error description
 
 
-def deleteRegisters(table):
+###def deleteRegisters(table):
     Remove all the records from the database of a given table.
     Args:
       table: Table to erase the registers from
@@ -55,35 +55,35 @@ def deleteRegisters(table):
        "ERROR" Database error description
 
 
-def deleteMatches():
+###def deleteMatches():
     Remove all the match records from the database.
        Returns:
         "OK"
         "ERROR" Database error description
 
 
-def deletePlayers():
+###def deletePlayers():
     Remove all the player records from the database.
        Returns:
         "OK"
         "ERROR" Database error description
     
     
-def deleteTournaments():
+###def deleteTournaments():
     Remove all the torunaments records from the database.
        Returns:
         "OK"
         "ERROR" Database error description
 
 
-def countPlayers():
+###def countPlayers():
     Returns the number of players currently registered.
        Returns:
         A one value tuple with number of players in the database
         ERROR - Problems with the database
      
 
-def registerPlayer(players_name, tournament=0):
+###def registerPlayer(players_name, tournament=0):
     Adds a player to the tournament database.
      Args:
       name: the player's full name (need not be unique).
@@ -92,7 +92,7 @@ def registerPlayer(players_name, tournament=0):
       "ERROR" Database error description
     
     
-def registerTournament(tournament_name):
+###def registerTournament(tournament_name):
     Adds a torunament to the tournament database.
      Args:
       name: the tourament name (need not be unique).
@@ -100,7 +100,7 @@ def registerTournament(tournament_name):
       "ERROR" Database error description
 
 
-def reportMatch(winner, loser, tie_result=False):
+###def reportMatch(winner, loser, tie_result=False):
    Records the outcome of a single match between two players.
 
     Args:
@@ -115,7 +115,7 @@ def reportMatch(winner, loser, tie_result=False):
     """
     
     
-def checkExistanceOfMatch(winner, loser):
+###def checkExistanceOfMatch(winner, loser):
     Checks if a particular game from a particular tournament is already in
     the database
        Args:
@@ -125,7 +125,7 @@ def checkExistanceOfMatch(winner, loser):
         True if the game is already present
 
 
-def check_Players_in_tournament(winner, loser):
+###def check_Players_in_tournament(winner, loser):
     Checks if a couple of players are in the same tournament and can play a 
     match
        Args:
@@ -135,7 +135,7 @@ def check_Players_in_tournament(winner, loser):
         True if the game is already present
 
 
-def playerStandings(tournament=0):
+###def playerStandings(tournament=0):
     Returns a list of the players and their win records, sorted by wins.
     The tournament ID =  0 is reserved for all tournaments
     The first entry in the list should be the player in first place, or a
@@ -150,7 +150,7 @@ def playerStandings(tournament=0):
         matches: the number of matches the player has played
 
 
-def swissPairings(tournament=0):
+###def swissPairings(tournament=0):
     Returns a list of pairs of players for the next round of a match.
     Assuming that there are an even number of players registered, each player
     appears exactly once in the pairings.  Each player is paired with another
@@ -165,5 +165,3 @@ def swissPairings(tournament=0):
         id2: the second player's unique id
         name2: the second player's name
  
-
-    
