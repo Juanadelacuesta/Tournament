@@ -42,7 +42,7 @@ def registerMultipleData(table, **column_data):
 # Format the query to be executed
     query = "INSERT INTO {} ({}) VALUES ({})".format(table, columns_str,
                                                      args_str)
-
+    print query 
     try:
         cur.execute(query, column_data)
     except psycopg2.Error as error:
